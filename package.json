@@ -1,0 +1,26 @@
+{
+  "name": "chatbot_telegram",
+  "version": "1.0.0",
+  "description": "chatBot Porta administracion",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lucho-vitanza/telegram_bot_byLuciano.git"
+  },
+  "keywords": [
+    "git",
+    "telegram",
+    "Porta",
+    "administracion",
+    "projects"
+  ],
+  "author": "Luciano Vitanza",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lucho-vitanza/telegram_bot_byLuciano/issues"
+  },
+  "homepage": "https://github.com/lucho-vitanza/telegram_bot_byLuciano#readme"
+}
