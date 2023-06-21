@@ -50,11 +50,16 @@ bot.on("text", (msg) => {
         fecha_compromiso_entrega
       } = JSON.parse(result);
 
-      bot.sendMessage(chatId, `Este es el código de artículo que pediste: ${numArticulo}`);
-      bot.sendMessage(chatId, `Esta es la cantidad recibida hasta la fecha actual: ${cantidad_solicitada}`);
-      bot.sendMessage(chatId, `Esta es la cantidad recibida hasta la fecha actual: ${cantidad_recibida}`);
-      bot.sendMessage(chatId, `Esta es la cantidad pendiente: ${cantidad_pendiente}`);
-      bot.sendMessage(chatId, `Esta es la fecha pactada para la próxima entrega de la OC: ${fecha_compromiso_entrega}`);  
+      bot.sendMessage(chatId, `Este es el código de artículo que pediste: ${numArticulo}  
+      Esta es la cantidad recibida hasta la fecha actual: ${cantidad_solicitada}
+      Esta es la cantidad recibida hasta la fecha actual: ${cantidad_recibida}
+      Esta es la cantidad pendiente: ${cantidad_pendiente}
+      Esta es la fecha pactada para la próxima entrega de la OC: ${fecha_compromiso_entrega}
+      `);
+      //bot.sendMessage(chatId, `Esta es la cantidad recibida hasta la fecha actual: ${cantidad_solicitada}`);
+      //bot.sendMessage(chatId, `Esta es la cantidad recibida hasta la fecha actual: ${cantidad_recibida}`);
+      //bot.sendMessage(chatId, `Esta es la cantidad pendiente: ${cantidad_pendiente}`);
+      //bot.sendMessage(chatId, `Esta es la fecha pactada para la próxima entrega de la OC: ${fecha_compromiso_entrega}`);  
 
 
       

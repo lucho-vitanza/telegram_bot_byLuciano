@@ -4,7 +4,8 @@
   "description": "chatBot Porta administracion",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
@@ -22,5 +23,8 @@
   "bugs": {
     "url": "https://github.com/lucho-vitanza/telegram_bot_byLuciano/issues"
   },
-  "homepage": "https://github.com/lucho-vitanza/telegram_bot_byLuciano#readme"
+  "homepage": "https://github.com/lucho-vitanza/telegram_bot_byLuciano#readme",
+  "dependencies": {
+    "telebot": "^1.4.1"
+  }
 }

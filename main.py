@@ -9,9 +9,12 @@ if __name__ == '__main__':
     numArticulo = sys.argv[1]  # Obtener el valor del primer argumento de línea de comandos
     numArticulo = int(numArticulo)
 
+    #df_data y df_dataC
 
-    df_data = pd.read_excel('/mnt/b/Documentos/9_Porta/src/proyecto_total_detallado_20230615110459.xlsx')
+    df_data = pd.read_excel('/mnt/b/Documentos/9_PORTAhnos/chatBot_telegram/src/proyecto_total_detallado_20230615110459.xlsx')
     df_dataC = df_data.copy()
+
+    #df_cantidades
 
     df_cantidades = pd.DataFrame()
     columnas_cantidades = ['CANTIDAD_SOLICITADA', 'CANTIDAD_RECIBIDA', 'CANTIDAD_PENDIENTE', 'CANTIDAD_REMITO', 'OC_NUMERO', 'CODIGO_ARTICULO']
@@ -20,12 +23,9 @@ if __name__ == '__main__':
     df_cantidades[columnas_cantidades] = df_dataC[columnas_cantidades].fillna(0)
     # CAMBIO DE TIPO DE DATO
     df_cantidades[columnas_cantidades] = df_cantidades[columnas_cantidades].astype(int)
-
     df_cantidades['OC_FECHA_COMPROMISO_ENTREGA'] = df_dataC['OC_FECHA_COMPROMISO_ENTREGA']
 
-    
-
-
+    # df_totales
 
 
 def llamarCantidades(df_cantidades, numArticulo):
@@ -66,9 +66,15 @@ def llamarCantidades(df_cantidades, numArticulo):
 resultados_json = llamarCantidades(df_cantidades, numArticulo)
 print(resultados_json)
 
+
+
+
+
 #print("Resultados:")
 #print(f"Cantidad solicitada: {resultados['cantidad_solicitada']}")
 #print(f"Cantidad recibida: {resultados['cantidad_recibida']}")
 #print(f"Cantidad pendiente: {resultados['cantidad_pendiente']}")
 #print(f"Fecha compromiso entrega: {resultados['fecha_compromiso_entrega']}")
 #print(df_cantidades["CODIGO_ARTICULO"])
+
+
