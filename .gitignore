@@ -1,0 +1,9 @@
+
+
+./src/**.xlxs
+
+./node_modules
+
+./package-lock.json
+
+./notas.txt

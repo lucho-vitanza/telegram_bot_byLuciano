@@ -1,0 +1,37 @@
+    valores_clasificacion = []
+
+    # Recorrer el diccionario y extraer los valores
+    for clasificacion, valor in resultados_df.items():
+        valores_clasificacion.append(valor)
+        
+
+    # Mostrar los valores
+    for clasificacion, valor in valores_clasificacion.items():
+        
+        clasificacion = clasificacion 
+        print(clasificacion)
+        print(valor)
+        print()
+
+
+
+
+    resultados_df = {
+
+            'clasificacion': valor,
+            
+        }
+    resultados_df_json = json.dumps(resultados_df)
+
+
+
+
+     tabla_md = "```\n"
+    tabla_md += "| clasificacion | USD || ARS |\n"
+    tabla_md += "|---------------|-----||-----|\n"
+    
+    for key, value in resultados_df.items():
+        tabla_md += f"| {key} | {value} || {value} |\n"
+    tabla_md += "```"
+    
+    resultados_df_json = json.dumps(tabla_md)
