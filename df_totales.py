@@ -136,26 +136,6 @@ def procesar_df():
     df_totales = asignar_valores_no(df_totales, 'TOTAL (U$S)')
     df_totales = asignar_valores_no(df_totales, 'TOTAL ($)')
 
-
-
-    #no_count = df_totales['CONSIDERAR'].value_counts()['NO']
-    #print("Número de valores 'NO' en la columna CONSIDERAR:", no_count)
-    
-    #df_totales_pesos.to_excel('df_totales_pesos.xlsx',index=False)
-    
-    
-    #df_totales = pd.merge(df_totales, df_totales_pesos, on='indice')
-
-    #df_merged = df_merged.merge(df_considerar[['indice', 'CONSIDERAR_OBS']], on='indice', how='left')
-    #df_merged['CONSIDERAR'] = df_merged['CONSIDERAR'].astype(str) + df_merged['CONSIDERAR_OBS'].astype(str)
-
-    #df_totales.to_excel('df_totales.xlsx',index=False)
-    # df_monedas ---------------------------------------------------------------------------------------->
-
-    #df_monedas = df_totales
-
-    #df_totales = df_monedas.copy()
-
     columnas_eliminar = ['TOTAL (U$S)', 'TOTAL ($)', 'coincidencias', 'coincidencias','indice']
     df_totales = df_totales.drop(columns=columnas_eliminar)
 
@@ -204,7 +184,7 @@ def procesar_df():
 
     df_facturas = encontrar_frase_mas_parecida(df_obs, frases_clave)
 
-    df_facturas.to_excel('df_facturas.xlsx',index=False)
+    #df_facturas.to_excel('df_facturas.xlsx',index=False)
 
 
     # df_facturas_fechas ---------------------------------------------------------------------------->
@@ -236,7 +216,7 @@ def procesar_df():
 
     df_facturas_fechas= extraer_fechas(df_obs)
 
-    df_facturas_fechas.to_excel('df_facturas_fechas.xlsx',index=False)
+    #df_facturas_fechas.to_excel('df_facturas_fechas.xlsx',index=False)
 
     # df_considerar ---------------------------------------------------------------------->
 
@@ -284,7 +264,7 @@ def procesar_df():
 
     df_considerar = encontrar_frase_mas_parecida(df_obs, frases_clave)
 
-    df_considerar.to_excel('df_considerar.xlsx',index=False)
+    #df_considerar.to_excel('df_considerar.xlsx',index=False)
 
     # INDICES + MERGE -------------------------------------------------------
 
@@ -329,7 +309,7 @@ def procesar_df():
 
     df_final = df_final[columnas_filtradas]
 
-    df_final.to_excel('df_final.xlsx',index=False)
+    #df_final.to_excel('df_final.xlsx',index=False)
 
 
     # df_normalizada ------------------------------------------------------------------------->
@@ -361,7 +341,7 @@ def procesar_df():
     columnas_FLOAT = ['CANTIDAD_SOLICITADA', 'CANTIDAD_REMITO']
     df_normalizada[columnas_FLOAT] = df_normalizada[columnas_FLOAT].astype(float)
 
-    df_normalizada.to_excel('df_normalizada.xlsx',index=False)
+    #df_normalizada.to_excel('df_normalizada.xlsx',index=False)
 
     # df_clasificacionOtros --------------------------------------------------------------------------------->
     df_obs = df_dataC["OBSERVACIONES"]
@@ -404,7 +384,7 @@ def procesar_df():
 
     df_clasificacionOtros = encontrar_frase_mas_parecida(df_obs, frases_clave)
 
-    df_clasificacionOtros.to_excel('df_clasificacionOtros.xlsx',index=False)
+    #df_clasificacionOtros.to_excel('df_clasificacionOtros.xlsx',index=False)
 
     # df_normalizadaC---------------------------------------------------------->
 
@@ -427,7 +407,7 @@ def procesar_df():
         else:  df_normalizadaC.at[index, "CANTIDAD"] = row["CANTIDAD_REMITO"]
 
 
-    df_normalizadaC.to_excel('df_normalizadaC.xlsx',index=False)
+    #df_normalizadaC.to_excel('df_normalizadaC.xlsx',index=False)
 
     # df_clasificar --------------------------------------------------------------------->
     
@@ -497,8 +477,4 @@ if __name__ == '__main__':
     numPresupuesto = int(numPresupuesto)
 
     resultados_json = procesar_df()
-
     print(resultados_json)
-    
-    
-
