@@ -1,6 +1,6 @@
 
 
-./src/**.xlxs
+./src/**.xlsx
 
 ./node_modules
 
@@ -8,4 +8,4 @@
 
 ./notas.txt
 
-./**.xlxs
+./**.xlsx
