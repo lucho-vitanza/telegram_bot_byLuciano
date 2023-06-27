@@ -7,15 +7,18 @@ import Levenshtein
 from datetime import datetime
 import datefinder
 
+import sys
 import json
+
+
+#1: Presupuesto_Mejoras_PA_Prote_CCP23
+#2: Presupuesto_Mnto_Planta_Prote_CCP23
+#3: 
 
 def procesar_df():
 
-    df_data = pd.read_excel('/mnt/b/Documentos/9_PORTAhnos/chatBot_telegram/src/proyecto_total_detallado_20230615110459.xlsx')
+    df_data = pd.read_excel(f'/mnt/b/Documentos/9_PORTAhnos/chatBot_telegram/src/{numPresupuesto}.xlsx')
     df_dataC = df_data.copy()
-
-   
-
 
     def setearTotal(df_dataC):
 
@@ -131,40 +134,51 @@ def procesar_df():
         return df
 
     df_totales = asignar_valores_no(df_totales, 'TOTAL (U$S)')
+    df_totales = asignar_valores_no(df_totales, 'TOTAL ($)')
+
+
 
     #no_count = df_totales['CONSIDERAR'].value_counts()['NO']
     #print("Número de valores 'NO' en la columna CONSIDERAR:", no_count)
     
+    #df_totales_pesos.to_excel('df_totales_pesos.xlsx',index=False)
+    
+    
+    #df_totales = pd.merge(df_totales, df_totales_pesos, on='indice')
 
+    #df_merged = df_merged.merge(df_considerar[['indice', 'CONSIDERAR_OBS']], on='indice', how='left')
+    #df_merged['CONSIDERAR'] = df_merged['CONSIDERAR'].astype(str) + df_merged['CONSIDERAR_OBS'].astype(str)
 
+    #df_totales.to_excel('df_totales.xlsx',index=False)
     # df_monedas ---------------------------------------------------------------------------------------->
 
-    df_monedas = df_totales
+    #df_monedas = df_totales
 
-    df_totales = df_monedas.copy()
+    #df_totales = df_monedas.copy()
 
     columnas_eliminar = ['TOTAL (U$S)', 'TOTAL ($)', 'coincidencias', 'coincidencias','indice']
-    df_totales = df_monedas.drop(columns=columnas_eliminar)
-
+    df_totales = df_totales.drop(columns=columnas_eliminar)
 
     df_totales = df_totales.rename(columns={'TOTAL (U$S)_x': 'TOTAL (U$S)', 'TOTAL ($)_x': 'TOTAL ($)'})
-    
-    
-    df_obs = df_dataC["OBSERVACIONES"]
 
+    
+    # df_facturas ---------------------------------------------------------------------------------->
+
+    df_obs = df_dataC["OBSERVACIONES"]
     df_obs = df_obs.to_frame()
 
     df_facturas = pd.DataFrame(columns=['Mejor_Texto', 'Similitud'])
     
-    frases_clave = ("A 0009-00055556","A 0009-00003407", "A 0006-00012269","C 0003-00000003","E 0002-00021191")
+    frases_clave = ("A 0009-00055556","A 0009-00003407", "A 0006-00012269","C 0003-00000003",
+                    "E 0002-00021191","M 0007-00000011")
 
-    def encontrar_frase_mas_parecida(df_obs, frases_clave):
+    def encontrar_frase_mas_parecida(df, frases_clave):
 
-        df_facturas = df_obs.copy()
+        df_facturas = df.copy()
         df_facturas['Mejor_Texto'] = ""
         df_facturas['Similitud'] = 0.0
 
-        for index, row in df_facturas.iterrows():
+        for index, row in df.iterrows():
             texto = row['OBSERVACIONES']  # Reemplaza 'columna_texto' con el nombre de la columna de texto en tu DataFrame
 
             mejor_similitud = 0
@@ -175,7 +189,7 @@ def procesar_df():
                     n = len(texto) - len(frase) + 1  # Número de subcadenas posibles en 'texto'
                     for i in range(n):
                         subcadena = texto[i:i+len(frase)]
-                        if subcadena[0] in ['A','C','E']:  # Verificar que la subcadena comience con 'A' o 'C'
+                        if subcadena[0] in ['A','C','E','M']:  # Verificar que la subcadena comience con 'A' o 'C'
                             similitud = Levenshtein.ratio(subcadena, frase)
                             if similitud > mejor_similitud:
                                 mejor_similitud = similitud
@@ -185,25 +199,24 @@ def procesar_df():
             df_facturas.at[index, 'Similitud'] = mejor_similitud
 
         
-        #df_facturas.loc[df_facturas['Similitud'] <= 0.5, 'Mejor_Texto'] = ""
+        df_facturas.loc[df_facturas['Similitud'] <= 0.5, 'Mejor_Texto'] = ""
         return df_facturas
 
     df_facturas = encontrar_frase_mas_parecida(df_obs, frases_clave)
 
-    
-    
+    df_facturas.to_excel('df_facturas.xlsx',index=False)
 
 
-    # df_facturas_fechas ---------------------------------------
+    # df_facturas_fechas ---------------------------------------------------------------------------->
 
     df_obs = df_dataC["OBSERVACIONES"]
     df_obs = df_obs.to_frame()
 
-    def extraer_fechas(df_obs):
-        df_facturas_fechas = df_obs.copy()
+    def extraer_fechas(df):
+        df_facturas_fechas = df.copy()
         df_facturas_fechas['FECHAS_FACTURAS'] = ""
 
-        for index, row in df_obs.iterrows():
+        for index, row in df.iterrows():
             texto = row['OBSERVACIONES']
 
             fechas_encontradas = list(datefinder.find_dates(texto))
@@ -217,16 +230,63 @@ def procesar_df():
             else:
                 df_facturas_fechas.at[index, 'FECHAS_FACTURAS'] = ""
 
+        df_facturas_fechas = df_facturas_fechas.drop(['OBSERVACIONES'],axis=1)
+
         return df_facturas_fechas
-
-
 
     df_facturas_fechas= extraer_fechas(df_obs)
 
+    df_facturas_fechas.to_excel('df_facturas_fechas.xlsx',index=False)
 
+    # df_considerar ---------------------------------------------------------------------->
+
+    df_obs = df_dataC["OBSERVACIONES"]
+    df_obs = df_obs.to_frame()
+
+    df_considerar = pd.DataFrame(columns=['Mejor_Texto_obs', 'Similitud_obs'])
+
+    df_considerar['CONSIDERAR_OBS'] = ''
+
+
+    frases_clave = ["Asiento Mensual Por Acreedores", "Provision Remitos sin Factura", "Reverso prov IVA",
+                        "Provision Manual Facturas a Recibir"]
+
+
+    def encontrar_frase_mas_parecida(df, frases_clave):
+        df_considerar['Mejor_Texto_obs'] = ""
+        df_considerar['Similitud_obs'] = 0.0
+
+        for index, row in df.iterrows():
+            texto = row['OBSERVACIONES']  # Reemplaza 'columna_texto' con el nombre de la columna de texto en tu DataFrame
+
+            mejor_similitud = 0
+            Mejor_Texto = None
+
+            for frase in frases_clave:
+                if len(texto) >= len(frase):
+                    n = len(texto) - len(frase) + 1  # Número de subcadenas posibles en 'texto'
+                    for i in range(n):
+                        subcadena = texto[i:i+len(frase)]
+                        similitud = Levenshtein.ratio(subcadena, frase)
+                        if similitud > mejor_similitud:
+                                mejor_similitud = similitud
+                                Mejor_Texto = subcadena
+
+            df_considerar.at[index, 'Mejor_Texto_obs'] = frase
+            df_considerar.at[index, 'Similitud_obs'] = mejor_similitud
+
+        #CRITERIO PARA DEFINIR QUE SI Y QUE NO DENTRO DEL RANGO DE Levenshtein
+
+        df_considerar.loc[df_considerar['Similitud_obs'] >= 0.8, 'CONSIDERAR_OBS'] = "NO"
+
+        
+        return df_considerar
+
+    df_considerar = encontrar_frase_mas_parecida(df_obs, frases_clave)
+
+    df_considerar.to_excel('df_considerar.xlsx',index=False)
 
     # INDICES + MERGE -------------------------------------------------------
-
 
     # Agregar una columna de índice a df_dataC
     df_dataC['indice'] = df_dataC.index
@@ -240,30 +300,45 @@ def procesar_df():
     # Agregar una columna de índice a df_resultados_fechas
     df_facturas_fechas['indice'] = df_facturas_fechas.index
 
+    # Agregar una columna de índice a df_considerar segun OBS
+    df_considerar['indice'] = df_considerar.index
+
     df_merged = pd.merge(df_totales, df_dataC, on='indice')
     df_merged = pd.merge(df_merged, df_facturas, on='indice')
     df_merged = pd.merge(df_merged, df_facturas_fechas, on='indice')
+    df_merged = df_merged.merge(df_considerar[['indice', 'CONSIDERAR_OBS']], on='indice', how='left')
+    df_merged['CONSIDERAR'] = df_merged['CONSIDERAR'].astype(str) + df_merged['CONSIDERAR_OBS'].astype(str)
+    df_merged = df_merged.drop(columns=['CONSIDERAR_OBS'])
+    df_merged['CONSIDERAR'] = df_merged['CONSIDERAR'].apply(lambda x: 'NO' if x != 'nan' else 'SI')
 
-
-
-    # df_final ---------------------------------------
+    # df_final -------------------------------------------------------------------------->
 
     df_final = df_merged.copy()
 
-    df_final = df_final.rename(columns={'Mejor_Texto': 'NUMERO_FACTURA', 'OBSERVACIONES_x' : 'OBSERVACIONES','FECHA' : 'FECHA_ASIENTO','NUMERO_OPERACION': 'NUMERO_ASIENTO'})
+    df_final = df_final.rename(columns={'Mejor_Texto': 'NUMERO_FACTURA', 
+                                        'OBSERVACIONES_x' : 'OBSERVACIONES',
+                                        'FECHA' : 'FECHA_ASIENTO',
+                                        'NUMERO_OPERACION': 'NUMERO_ASIENTO'})
 
-
-    columnas_filtradas = ['IMPUTACION','CANTIDAD_SOLICITADA', 'CANTIDAD_REMITO','TOTAL (U$S)', 'TOTAL ($)', 'CONSIDERAR', 'FECHAS_FACTURAS', 'NUMERO_FACTURA', 'CUENTA_CONTABLE_OC', 'DESCRIPCION_CUENTA_CONTABLE_OC', 'PROYECTO_CODIGO_OC', 'PROYECTO_OC', 'NUMERO_REMITO', 'FECHA_REMITO', 'OBSERVACIONES', 'PROVEEDOR', 'OC_FECHA', 'OC_USUARIO', 'FECHA_ASIENTO', 'OC_NUMERO', 'TIPO', 'NUMERO_ASIENTO', 'CODIGO_ARTICULO', 'ARTICULO']
+    columnas_filtradas = ['IMPUTACION','CANTIDAD_SOLICITADA', 'CANTIDAD_REMITO','TOTAL (U$S)', 'TOTAL ($)', 
+                          'CONSIDERAR', 'FECHAS_FACTURAS', 'NUMERO_FACTURA', 'CUENTA_CONTABLE_OC', 
+                          'DESCRIPCION_CUENTA_CONTABLE_OC', 'PROYECTO_CODIGO_OC', 'PROYECTO_OC',
+                            'NUMERO_REMITO', 'FECHA_REMITO', 'OBSERVACIONES', 'PROVEEDOR', 'OC_FECHA',
+                            'OC_USUARIO', 'FECHA_ASIENTO', 'OC_NUMERO', 'TIPO', 'NUMERO_ASIENTO',
+                            'CODIGO_ARTICULO', 'ARTICULO','CODIGO_IMPUTACION']
 
     df_final = df_final[columnas_filtradas]
 
+    df_final.to_excel('df_final.xlsx',index=False)
 
 
     # df_normalizada ------------------------------------------------------------------------->
 
     df_normalizada = df_final.copy()
 
-    columnas_numericas = ['NUMERO_FACTURA', 'NUMERO_ASIENTO', 'OC_NUMERO', 'CODIGO_ARTICULO','NUMERO_REMITO','CUENTA_CONTABLE_OC','CANTIDAD_SOLICITADA', 'CANTIDAD_REMITO']
+    columnas_numericas = ['NUMERO_FACTURA', 'NUMERO_ASIENTO', 'OC_NUMERO', 'CODIGO_ARTICULO',
+                          'NUMERO_REMITO','CUENTA_CONTABLE_OC','CANTIDAD_SOLICITADA',
+                           'CANTIDAD_REMITO','CODIGO_IMPUTACION']
     df_normalizada[columnas_numericas] = df_normalizada[columnas_numericas].fillna(0)
 
     #RELLENO los registros vacios con el nombre o el codigo de proyecto segun corresponda
@@ -271,51 +346,79 @@ def procesar_df():
     df_normalizada['PROYECTO_OC'] = df_normalizada['PROYECTO_OC'].fillna(df_normalizada['PROYECTO_OC'].ffill())
 
 
-    # Saco los asientos que no empiecen con 16
-    df_normalizada.loc[~df_normalizada["NUMERO_ASIENTO"].str.startswith("16"), "NUMERO_ASIENTO"] = "0"
+    #Saco los asientos que no empiecen con 16
+    df_normalizada.loc[~(df_normalizada["NUMERO_ASIENTO"].str.startswith(("16","17"))), "NUMERO_ASIENTO"] = "0"
+
+    #saco los "-" de la columna codigo_imputacion
+    df_normalizada.loc[df_normalizada["CODIGO_IMPUTACION"] == "-", "CODIGO_IMPUTACION"] = 0
 
     #CAMBIO DE TIPO FLOAT64 a INT
-    columnas_enteros = ['OC_NUMERO', 'CODIGO_ARTICULO', 'NUMERO_REMITO', 'CUENTA_CONTABLE_OC','NUMERO_ASIENTO']
+    columnas_enteros = ['OC_NUMERO', 'CODIGO_ARTICULO', 'NUMERO_REMITO', 'CUENTA_CONTABLE_OC',
+                        'NUMERO_ASIENTO','CODIGO_IMPUTACION']
     df_normalizada[columnas_enteros] = df_normalizada[columnas_enteros].astype(int)
 
     #CAMBIO DE TIPO .str a FLOAT
     columnas_FLOAT = ['CANTIDAD_SOLICITADA', 'CANTIDAD_REMITO']
     df_normalizada[columnas_FLOAT] = df_normalizada[columnas_FLOAT].astype(float)
 
+    df_normalizada.to_excel('df_normalizada.xlsx',index=False)
 
-    # df-normalizadaC   ----------------------------------------------------------------------->
+    # df_clasificacionOtros --------------------------------------------------------------------------------->
+    df_obs = df_dataC["OBSERVACIONES"]
+    df_obs = df_obs.to_frame()
+    
+    df_clasificacionOtros = pd.DataFrame(columns=['Mejor_Texto', 'Similitud'])
 
-    df_normalizadaC=df_normalizada.copy()
+    frases_clave = ["Provision Hs de trabajo", "P/reclasf", "CONSUMOS DEPOSITO",
+                    "AJUSTE STOCK PAÑOL","REVERSO Hs de trabajo",]
 
+    def encontrar_frase_mas_parecida(df, frases_clave):
 
-    frases_condicion = ["Provision Hs de trabajo", "P/reclasf", "CONSUMOS DEPOSITO"]
-    df_normalizadaC['tiene texto especial?'] = 0
-    df_normalizadaC['frase'] = ""
+        df_clasificacionOtros = df.copy()
+        df_clasificacionOtros['Mejor_Texto'] = ""
+        df_clasificacionOtros['Similitud'] = 0.0
 
-    # Verificar si alguna de las frases condicionales se encuentra en el texto de la columna 'OBSERVACIONES'
-    for index, row in df_normalizadaC.iterrows():
-        texto = row['OBSERVACIONES']
+        for index, row in df.iterrows():
+            texto = row['OBSERVACIONES']  # Reemplaza 'columna_texto' con el nombre de la columna de texto en tu DataFrame
 
-        for frase in frases_condicion:
-            if frase in texto:
-                df_normalizadaC.loc[index, 'tiene texto especial?'] = 1
-                df_normalizadaC.loc[index, 'frase'] = frase
-                break
+            mejor_similitud = 0
+            mejor_texto = None
 
-#------------------------------------------->cuenta contable y cantidad-----------------
+            for frase in frases_clave:
+                if len(texto) >= len(frase):
+                    n = len(texto) - len(frase) + 1  # Número de subcadenas posibles en 'texto'
+                    for i in range(n):
+                        subcadena = texto[i:i+len(frase)]
+                        similitud = Levenshtein.ratio(subcadena, frase)
+                        if similitud > mejor_similitud:
+                                mejor_similitud = similitud
+                                mejor_texto = frase
 
+            df_clasificacionOtros.at[index, 'Mejor_Texto'] = mejor_texto
+            df_clasificacionOtros.at[index, 'Similitud'] = mejor_similitud
+
+        df_clasificacionOtros.loc[df_clasificacionOtros['Similitud'] <= 0.7, 'Mejor_Texto'] = ""
+        df_clasificacionOtros['texto_especial'] = df_clasificacionOtros['Mejor_Texto'].apply(lambda x: 1 if x in ["Provision Hs de trabajo","REVERSO Hs de trabajo"] else (2 if x == "P/reclasf" else (3 if x in ["CONSUMOS DEPOSITO", "AJUSTE STOCK PAÑOL"] else 0)))
+
+        return df_clasificacionOtros
+
+    df_clasificacionOtros = encontrar_frase_mas_parecida(df_obs, frases_clave)
+
+    df_clasificacionOtros.to_excel('df_clasificacionOtros.xlsx',index=False)
+
+    # df_normalizadaC---------------------------------------------------------->
+
+    df_normalizadaC = df_normalizada.copy()
     df_normalizadaC["CANTIDAD"] = 0
-
     df_normalizadaC["CUENTA_CONTABLE"] = ""
 
     for index, row in df_normalizadaC.iterrows():
 
     #cuenta contable
-
-        if (row["IMPUTACION"] != 0.0):
+        if (row["IMPUTACION"] != "-"):
             df_normalizadaC.at[index, "CUENTA_CONTABLE"] = row["IMPUTACION"]
 
-        elif (row["IMPUTACION"] == 0.0):
+        elif (row["IMPUTACION"]):
             df_normalizadaC.at[index, "CUENTA_CONTABLE"] = row["DESCRIPCION_CUENTA_CONTABLE_OC"]
 
     #cantidades
@@ -324,12 +427,14 @@ def procesar_df():
         else:  df_normalizadaC.at[index, "CANTIDAD"] = row["CANTIDAD_REMITO"]
 
 
-    #print(f'columnas df_normalizadaC cuando usamos cuenta contable y cantidades {df_normalizadaC.columns}')
+    df_normalizadaC.to_excel('df_normalizadaC.xlsx',index=False)
 
-    # df_clasificar ---------------------------------------------------------
-
-    #   print(df_normalizadaC.dtypes)
-
+    # df_clasificar --------------------------------------------------------------------->
+    
+    df_clasificacionOtros["indice"] = df_clasificacionOtros.index
+    df_normalizadaC["indice"] = df_normalizadaC.index
+    df_normalizadaC = df_normalizadaC.merge(df_clasificacionOtros[['indice', 'texto_especial']], on='indice', how='left')
+    
     def clasificar(df):
 
         def es_digito(cadena):
@@ -343,55 +448,57 @@ def procesar_df():
         df["CLASIFICACION"] = ""
 
         for index, row in df.iterrows():
-
             if (row["NUMERO_ASIENTO"] == 0) and (row["NUMERO_FACTURA_1111"] == 0) and (row["NUMERO_REMITO"] == 0) and (row["OC_NUMERO"] != 0):
                 df.at[index, "CLASIFICACION"] = "Oc Sin remito y sin factura"
-
             elif (row["NUMERO_ASIENTO"] != 0) and (row["NUMERO_FACTURA_1111"] != 0) and (row["NUMERO_REMITO"] != 0) and (row["OC_NUMERO"] != 0):
                 df.at[index, "CLASIFICACION"] = "Oc Con remito y con factura"
-
             elif (row["NUMERO_ASIENTO"] == 0) and (row["NUMERO_FACTURA_1111"] == 0) and (row["NUMERO_REMITO"] != 0) and (row["OC_NUMERO"] != 0):
                 df.at[index, "CLASIFICACION"] = "Oc Con remito y sin factura"
-
             elif (row["NUMERO_ASIENTO"] != 0) and (row["NUMERO_FACTURA_1111"] != 0) and (row["NUMERO_REMITO"] == 0) and (row["OC_NUMERO"] == 0):
                 df.at[index, "CLASIFICACION"] = "Factura de servicios"
-
-            elif (row["NUMERO_ASIENTO"] != 0) and (row["NUMERO_FACTURA_1111"] == 0) and (row["NUMERO_REMITO"] == 0) and (row["OC_NUMERO"] == 0): #and (row["tiene texto especial?"] == 0):
+            elif (row["NUMERO_ASIENTO"] != 0) and (row["NUMERO_FACTURA_1111"] == 0) and (row["NUMERO_REMITO"] == 0) and (row["OC_NUMERO"] == 0) and (row["texto_especial"] == 0):
                 df.at[index, "CLASIFICACION"] = "Otros asientos (reclasif/compes)"
-
+            elif (row["NUMERO_ASIENTO"] != 0) and (row["NUMERO_FACTURA_1111"] == 0) and (row["NUMERO_REMITO"] == 0) and (row["OC_NUMERO"] == 0) and (row["texto_especial"] == 1):
+                df.at[index, "CLASIFICACION"] = "Asiento de sueldos"
+            elif (row["NUMERO_ASIENTO"] != 0) and (row["NUMERO_FACTURA_1111"] == 0) and (row["NUMERO_REMITO"] == 0) and (row["OC_NUMERO"] == 0) and (row["texto_especial"] == 2):
+                df.at[index, "CLASIFICACION"] = "Otros asientos (reclasif/compes)"
+            elif (row["NUMERO_ASIENTO"] != 0) and (row["NUMERO_FACTURA_1111"] == 0) and (row["NUMERO_REMITO"] == 0) and (row["OC_NUMERO"] == 0) and (row["texto_especial"] == 3):
+                df.at[index, "CLASIFICACION"] = "Asientos Pannol"
             else:
                 df.at[index, "CLASIFICACION"] = np.nan
-        
         return df
 
     df_clasificada = clasificar(df_normalizadaC)
 
-
-    #print(f'columnas df_normalizadaC despuus de clasificar {df_clasificada.columns}')
-
-    columnas_filtradas = ['TOTAL (U$S)', 'TOTAL ($)', 'CONSIDERAR', 'FECHAS_FACTURAS', 'NUMERO_FACTURA', 'CUENTA_CONTABLE_OC', 'DESCRIPCION_CUENTA_CONTABLE_OC', 'PROYECTO_CODIGO_OC', 'PROYECTO_OC', 'NUMERO_REMITO', 'FECHA_REMITO', 'OBSERVACIONES', 'PROVEEDOR', 'OC_FECHA', 'CLASIFICACION', 'FECHA_ASIENTO', 'OC_NUMERO', 'TIPO', 'NUMERO_ASIENTO', 'CODIGO_ARTICULO', 'ARTICULO',"CANTIDAD", "CUENTA_CONTABLE","IMPUTACION"]
+    columnas_filtradas = ['TOTAL (U$S)', 'TOTAL ($)', 'CONSIDERAR', 'FECHAS_FACTURAS',
+                          'NUMERO_FACTURA', 'CUENTA_CONTABLE_OC',
+                          'PROYECTO_CODIGO_OC', 'PROYECTO_OC', 'NUMERO_REMITO',
+                          'FECHA_REMITO', 'OBSERVACIONES', 'PROVEEDOR', 'OC_FECHA',
+                          'CLASIFICACION', 'FECHA_ASIENTO', 'OC_NUMERO',
+                          'TIPO', 'NUMERO_ASIENTO', 'CODIGO_ARTICULO', 'ARTICULO',
+                          "CANTIDAD", "CUENTA_CONTABLE",'CODIGO_IMPUTACION']
 
     df_clasificada = df_normalizadaC[columnas_filtradas]
 
-    df_clasificada = df_clasificada.drop('OBSERVACIONES', axis=1)
+    df_clasificada.to_excel('df_clasificada.xlsx',index=False)
 
-    #print(df_clasificada)
-# df_agrupado -------------------------------------------------->
+    
+    # df_agrupado -------------------------------------------------->
 
     df_agrupado = df_clasificada.groupby('CLASIFICACION').agg({'TOTAL (U$S)': 'sum', 'TOTAL ($)': 'sum', 'CANTIDAD': 'sum'})
 
-    #resultados_df = df_agrupado.to_dict(orient='index')
-
-    #resultados_df_json = json.dumps(df_agrupado)
+    df_agrupado.to_excel('df_agrupado.xlsx',index=False)
     
-    #return resultados_df_json
-    return df_agrupado.to_json(orient='records')
-    #return df_clasificada.to_json(orient='records')
-
+    return df_clasificada
 
 if __name__ == '__main__':
 
+    numPresupuesto = sys.argv[1]  # Obtener el valor del primer argumento de línea de comandos
+    numPresupuesto = int(numPresupuesto)
+
     resultados_json = procesar_df()
 
-
     print(resultados_json)
+    
+    
+

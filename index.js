@@ -1,6 +1,6 @@
 const Telebot = require("telebot");
 const { exec } = require("child_process");
-const CONSTANTS = require("./CONSTANTS");
+const CONSTANTS = require("./constants");
 
 const bot = new Telebot({
   token: CONSTANTS.TELEGRAM_TOKEN,
@@ -51,7 +51,7 @@ bot.on("text", (msg) => {
       } = JSON.parse(result);
 
       bot.sendMessage(chatId, `Este es el código de artículo que pediste: ${numArticulo}  
-      Esta es la cantidad recibida hasta la fecha actual: ${cantidad_solicitada}
+      Esta es la cantidad solicitada: ${cantidad_solicitada}
       Esta es la cantidad recibida hasta la fecha actual: ${cantidad_recibida}
       Esta es la cantidad pendiente: ${cantidad_pendiente}
       Esta es la fecha pactada para la próxima entrega de la OC: ${fecha_compromiso_entrega}

@@ -25,9 +25,6 @@ if __name__ == '__main__':
     df_cantidades[columnas_cantidades] = df_cantidades[columnas_cantidades].astype(int)
     df_cantidades['OC_FECHA_COMPROMISO_ENTREGA'] = df_dataC['OC_FECHA_COMPROMISO_ENTREGA']
 
-    
-
-
 def llamarCantidades(df_cantidades, numArticulo):
 # Filtrar el DataFrame por el código de artículo
 
