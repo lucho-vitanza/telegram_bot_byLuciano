@@ -16,17 +16,6 @@ def estadisticas(df):
     df_clasificacion = df.groupby('CLASIFICACION').agg({'TOTAL (U$S)': 'sum', 'TOTAL ($)': 'sum', 'CANTIDAD': 'sum'})
     df_tipo = df.groupby('TIPO').agg({'TOTAL (U$S)': 'sum', 'TOTAL ($)': 'sum', 'CANTIDAD': 'sum'})
     
-    # Obtener la suma de la columna "TOTAL (U$S)" agrupada por valores únicos de la columna "TIPO"
-    #suma_total_usd_por_tipo = df.groupby("TIPO")["TOTAL (U$S)"].sum()
-
-    # Obtener la suma de la columna "TOTAL (U$S)" agrupada por valores únicos de la columna "CUENTA_CONTABLE"
-    #suma_total_usd_por_cuenta_contable = df.groupby("CUENTA_CONTABLE")["TOTAL (U$S)"].sum()
-
-    # Obtener la suma de la columna "CANTIDAD" agrupada por valores únicos de la columna "OC_NUMERO"
-    #suma_cantidad_por_oc_numero = df.groupby("OC_NUMERO")["CANTIDAD"].sum()
-
-    # Obtener los valores únicos de la columna "CLASIFICACION"
-    #suma_cantidad_clasificacion = df.groupby("CLASIFICACION")["TOTAL (U$S)"].sum()
 
     # Obtener la suma de la columna "TOTAL (U$S)"
     suma_total_usd = df["TOTAL (U$S)"].sum()
@@ -55,14 +44,6 @@ def estadisticas(df):
 
     sumatoria_cuenta_contable = pd.Series(df_cuenta_contable["SUMA"].round(2), name="Sumatoria Cuenta Contable")
     #porcentaje_cuenta_contable = pd.Series(df_cuenta_contable["PORCENTAJE"].round(2), name="Porcentaje Cuenta Contable")
-
-
-
-
-
-
-
-
 
     resultados = {
         "Total en el proyecto" : round(suma_total_usd,2),

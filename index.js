@@ -82,36 +82,27 @@ bot.on("callbackQuery", async (msg) => {
       await bot.sendMessage(chatId, `
         ---
         El monto ejecutado del proyecto es de 
-        ${formatCurrency(suma_total_usd)}
+        ${formatCurrency(suma_total_usd.toFixed(0))}
         de los cuales hay: 
-        ${cantidad_numero_factura} cantidad de facturas,
-        ${cantidad_numero_remito} remitos y 
-        ${cantidad_oc_numero} de Ordenes de compra
+        ${cantidad_numero_factura.toFixed(0)} facturas,
+        ${cantidad_numero_remito.toFixed(0)} remitos y 
+        ${cantidad_oc_numero.toFixed(0)} Ordenes de compras
         ---
       `);
 
       // Tabla de porcentajes
-      let tablaMd1 = "Porcentajes facturados, con remito de la OC:\n";
+      let tablaMd1 = "Porcentajes facturados, con remito, en OC de lo ejecutado:\n";
       tablaMd1 += "| TIPO | % |\n";
 
       for (const [key, value] of Object.entries(porcentaje_tipo)) {
-        tablaMd1 += `| ${key} | % ${value.toFixed(2)} |\n`;
+        tablaMd1 += `| ${key} | % ${value.toFixed(1)} |\n`;
       }
 
       await bot.sendMessage(chatId, tablaMd1);
-
-      // Tabla de cuentas contables
-      let tablaMd2 = "Total ejecutado por Cuenta contable\n";
-      tablaMd2 += "| CUENTA CONTABLE | USD |\n";
-
-      for (const [key, value] of Object.entries(sumatoria_cuenta_contable)) {
-        tablaMd2 += `| ${key} | ${formatCurrency(value)} |\n`;
-      }
-
-      await bot.sendMessage(chatId, tablaMd2);
+      
 
       // Tabla por clasificación
-      let tablaMd = "Presupuesto por clasificación contable:\n";
+      let tablaMd = "Presupuesto por Clasificación contable:\n";
       tablaMd += "| Clasificación contable | USD |\n";
 
       for (const [key, value] of Object.entries(sumatoria_clasificacion)) {
@@ -119,6 +110,17 @@ bot.on("callbackQuery", async (msg) => {
       }
 
       await bot.sendMessage(chatId, tablaMd);
+
+
+      // Tabla de cuentas contables
+      let tablaMd2 = "Total ejecutado por Cuenta contable:\n";
+      tablaMd2 += "| CUENTA CONTABLE | USD |\n";
+
+      for (const [key, value] of Object.entries(sumatoria_cuenta_contable)) {
+        tablaMd2 += `| ${key} | ${formatCurrency(value)} |\n`;
+      }
+      await bot.sendMessage(chatId, tablaMd2);
+
     } catch (error) {
       console.error("Error al obtener el presupuesto:", error);
       await bot.sendMessage(chatId, "Ocurrió un error al obtener el presupuesto. Por favor, intenta de nuevo más tarde.");
