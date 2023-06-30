@@ -36,7 +36,7 @@ def llamarCantidades(df_cantidades, numArticulo):
     else:
         fecha_compromiso_entrega = None  # O asigna cualquier otro valor predeterminado que desees
 
-# Calcular las sumas de las columnas requeridas
+    # Calcular las sumas de las columnas requeridas
     cantidad_solicitada = df_filtrado['CANTIDAD_SOLICITADA'].sum()
     cantidad_recibida = df_filtrado['CANTIDAD_RECIBIDA'].sum()
     cantidad_pendiente = df_filtrado['CANTIDAD_PENDIENTE'].sum()
@@ -62,11 +62,6 @@ def llamarCantidades(df_cantidades, numArticulo):
 
 resultados_json = llamarCantidades(df_cantidades, numArticulo)
 print(resultados_json)
-
-
-
-
-
 #print("Resultados:")
 #print(f"Cantidad solicitada: {resultados['cantidad_solicitada']}")
 #print(f"Cantidad recibida: {resultados['cantidad_recibida']}")

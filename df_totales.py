@@ -10,12 +10,11 @@ import datefinder
 import sys
 import json
 
-
 #1: Presupuesto_Mejoras_PA_Prote_CCP23
 #2: Presupuesto_Mnto_Planta_Prote_CCP23
 #3: 
 
-def procesar_df():
+def procesar_df(numPresupuesto):
 
     df_data = pd.read_excel(f'/mnt/b/Documentos/9_PORTAhnos/chatBot_telegram/src/{numPresupuesto}.xlsx')
     df_dataC = df_data.copy()
@@ -146,6 +145,7 @@ def procesar_df():
 
     df_obs = df_dataC["OBSERVACIONES"]
     df_obs = df_obs.to_frame()
+    
 
     df_facturas = pd.DataFrame(columns=['Mejor_Texto', 'Similitud'])
     
@@ -160,23 +160,22 @@ def procesar_df():
 
         for index, row in df.iterrows():
             texto = row['OBSERVACIONES']  # Reemplaza 'columna_texto' con el nombre de la columna de texto en tu DataFrame
-
             mejor_similitud = 0
             mejor_texto = None
+            if isinstance(texto, str):
+                for frase in frases_clave:
+                    if len(texto) >= len(frase):
+                        n = len(texto) - len(frase) + 1  # Número de subcadenas posibles en 'texto'
+                        for i in range(n):
+                            subcadena = texto[i:i+len(frase)]
+                            if subcadena[0] in ['A','C','E','M']:  # Verificar que la subcadena comience con 'A' o 'C'
+                                similitud = Levenshtein.ratio(subcadena, frase)
+                                if similitud > mejor_similitud:
+                                    mejor_similitud = similitud
+                                    mejor_texto = subcadena
 
-            for frase in frases_clave:
-                if len(texto) >= len(frase):
-                    n = len(texto) - len(frase) + 1  # Número de subcadenas posibles en 'texto'
-                    for i in range(n):
-                        subcadena = texto[i:i+len(frase)]
-                        if subcadena[0] in ['A','C','E','M']:  # Verificar que la subcadena comience con 'A' o 'C'
-                            similitud = Levenshtein.ratio(subcadena, frase)
-                            if similitud > mejor_similitud:
-                                mejor_similitud = similitud
-                                mejor_texto = subcadena
-
-            df_facturas.at[index, 'Mejor_Texto'] = mejor_texto
-            df_facturas.at[index, 'Similitud'] = mejor_similitud
+                df_facturas.at[index, 'Mejor_Texto'] = mejor_texto
+                df_facturas.at[index, 'Similitud'] = mejor_similitud
 
         
         df_facturas.loc[df_facturas['Similitud'] <= 0.5, 'Mejor_Texto'] = ""
@@ -311,7 +310,6 @@ def procesar_df():
 
     #df_final.to_excel('df_final.xlsx',index=False)
 
-
     # df_normalizada ------------------------------------------------------------------------->
 
     df_normalizada = df_final.copy()
@@ -325,8 +323,7 @@ def procesar_df():
     df_normalizada['PROYECTO_CODIGO_OC'] = df_normalizada['PROYECTO_CODIGO_OC'].fillna(df_normalizada['PROYECTO_CODIGO_OC'].ffill())
     df_normalizada['PROYECTO_OC'] = df_normalizada['PROYECTO_OC'].fillna(df_normalizada['PROYECTO_OC'].ffill())
 
-
-    #Saco los asientos que no empiecen con 16
+    #Saco los asientos que no empiecen con 16 y 17
     df_normalizada.loc[~(df_normalizada["NUMERO_ASIENTO"].str.startswith(("16","17"))), "NUMERO_ASIENTO"] = "0"
 
     #saco los "-" de la columna codigo_imputacion
@@ -395,11 +392,15 @@ def procesar_df():
     for index, row in df_normalizadaC.iterrows():
 
     #cuenta contable
-        if (row["IMPUTACION"] != "-"):
+        if (row["IMPUTACION"] != "-" ):
             df_normalizadaC.at[index, "CUENTA_CONTABLE"] = row["IMPUTACION"]
+            
 
         elif (row["IMPUTACION"]):
             df_normalizadaC.at[index, "CUENTA_CONTABLE"] = row["DESCRIPCION_CUENTA_CONTABLE_OC"]
+
+        if (row["CODIGO_IMPUTACION"]== 0):
+            df_normalizadaC.at[index, "CODIGO_IMPUTACION"] = row["CUENTA_CONTABLE_OC"]
 
     #cantidades
 
@@ -460,14 +461,7 @@ def procesar_df():
 
     df_clasificada = df_normalizadaC[columnas_filtradas]
 
-    df_clasificada.to_excel('df_clasificada.xlsx',index=False)
-
-    
-    # df_agrupado -------------------------------------------------->
-
-    df_agrupado = df_clasificada.groupby('CLASIFICACION').agg({'TOTAL (U$S)': 'sum', 'TOTAL ($)': 'sum', 'CANTIDAD': 'sum'})
-
-    df_agrupado.to_excel('df_agrupado.xlsx',index=False)
+    df_clasificada.to_excel(f'df_clasificada_{numPresupuesto}.xlsx',index=False)
     
     return df_clasificada
 
@@ -476,5 +470,6 @@ if __name__ == '__main__':
     numPresupuesto = sys.argv[1]  # Obtener el valor del primer argumento de línea de comandos
     numPresupuesto = int(numPresupuesto)
 
-    resultados_json = procesar_df()
-    print(resultados_json)
+    df_clasificada = procesar_df(numPresupuesto)
+    #print(df_clasificada)
+    #print(df_clasificada.columns)
