@@ -41,15 +41,47 @@ const formatCurrency = (value) => {
   return value.toLocaleString("es-AR", { style: "currency", currency: "USD" });
 };
 
+// PRES MEJORAS PA - PROTE - CCP 23 =  1
+// PRES MANTENIMIENTO PA - PROTE - CCP 23 = 2
+// 
+
+  const proyectos = [
+  { numPresupuesto: 1, nombre: "PRESUPUESTO MEJ. PA- PROTE- CCP23" },
+  { numPresupuesto: 2, nombre: "PRESUPUESTO MNTO. PA- PROTE- CCP23" },
+  { numPresupuesto: 3, nombre: "PRESUPUESTO PROD. CONS MASIV 23" },
+  { numPresupuesto: 4, nombre: "PROYECTO PRENSADO DE SOJA" },
+  { numPresupuesto: 5, nombre: "PRESUPUESTO PROD. PA MIN CACO 23" },
+  { numPresupuesto: 6, nombre: "PROYECTO PLANTA SPC FOOD 1000 TN" },
+  ];
+
+  const getNombreProyecto = (numPresupuesto) => {
+  const proyecto = proyectos.find((p) => p.numPresupuesto === numPresupuesto);
+  return proyecto ? proyecto.nombre : "";
+  };
+
 bot.on(["/start", "/hola"], async (msg) => {
   try {
     await bot.sendMessage(msg.chat.id, `Hola ${msg.chat.username}, tenemos unos presupuestos para vos.`, {
       replyMarkup: {
         inline_keyboard: [
           [
-            { text: "Presupuesto_Mejoras_PA_Prote_CCP23", callback_data: 1 },
-            { text: "Presupuesto_Mnto_Planta_Prote_CCP23", callback_data: 2 },
+            { text: "PRESUPUESTO MEJ. PA- PROTE- CCP23", callback_data: 1 },
           ],
+          [
+            { text: "PRESUPUESTO MNTO. PA- PROTE- CCP23", callback_data: 2 },
+          ],
+          [
+            { text: "PRESUPUESTO PROD. CONS MASIV 23", callback_data: 3 },
+          ],
+          [
+            { text: "PRESUPUESTO PROD. PA MIN CACO 23", callback_data: 5 },
+          ],
+          [
+            { text: "PROYECTO PRENSADO DE SOJA", callback_data: 4 },
+          ],
+          [
+            { text: "PROYECTO PLANTA SPC FOOD 1000 TN", callback_data: 6 },
+          ]
         ],
       },
     });
@@ -62,10 +94,12 @@ bot.on("callbackQuery", async (msg) => {
   const choice = msg.data;
   const chatId = msg.message.chat.id;
 
-  if (choice === "1" || choice === "2") {
+  if (choice === "1" || choice === "2" || choice === "3" || choice === "4" 
+    || choice === "5"|| choice === "6") {
     const numPresupuesto = parseInt(choice);
     try {
-      await bot.sendMessage(chatId, `Obteniendo presupuesto ${choice}...`);
+      const nombreProyecto = getNombreProyecto(numPresupuesto);
+      await bot.sendMessage(chatId, `Obteniendo presupuesto ${nombreProyecto}...`);
 
       const presupuesto = await getPresupuesto(numPresupuesto);
 
@@ -82,11 +116,11 @@ bot.on("callbackQuery", async (msg) => {
       await bot.sendMessage(chatId, `
         ---
         El monto ejecutado del proyecto es de 
-        ${formatCurrency(suma_total_usd.toFixed(0))}
+        ${formatCurrency(suma_total_usd)}
         de los cuales hay: 
-        ${cantidad_numero_factura.toFixed(0)} facturas,
-        ${cantidad_numero_remito.toFixed(0)} remitos y 
-        ${cantidad_oc_numero.toFixed(0)} Ordenes de compras
+        ${cantidad_numero_factura} facturas,
+        ${cantidad_numero_remito} remitos y 
+        ${cantidad_oc_numero} Ordenes de compras
         ---
       `);
 

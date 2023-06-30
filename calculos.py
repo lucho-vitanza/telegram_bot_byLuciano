@@ -7,7 +7,7 @@ numPresupuesto = sys.argv[1]  # Obtener el valor del primer argumento de línea 
 numArnumPresupuesto = int(numPresupuesto)
 
 
-df_clasificada = pd.read_excel(f'/mnt/b/Documentos/9_PORTAhnos/chatBot_telegram/df_clasificada_{numPresupuesto}.xlsx')
+df_clasificada = pd.read_excel(f'/mnt/b/Documentos/9_PORTAhnos/chatBot_telegram/src/df_clasificada_{numPresupuesto}.xlsx')
 
 def estadisticas(df):
 
