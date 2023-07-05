@@ -37,7 +37,7 @@ def procesar_df(numPresupuesto):
     df_totales = setearTotal(df_dataC)
 
     
-    #---------------------------------------------------
+    #------------- Neteo por valores
 
     def asignar_valores_no(df, columna):
 
@@ -50,10 +50,10 @@ def procesar_df(numPresupuesto):
             #print(f'valor = {valor}, ocurrencia = {ocurrencias}' )
 
             #si la cantidad de ocurrencias es divisible por dos quiere decir que todos van con "NO"
-            if ocurrencias % 2 == 0 :
+            if ocurrencias % 2 == 0 and valor != 0 :
 
-                value_counts_negative = len(df[df[columna] == valor])
-                value_counts_positive = len(df[df[columna] == -valor])
+                value_counts_negative = len(df[df[columna] == valor] )
+                value_counts_positive = len(df[df[columna] == -valor] )
 
                 #print(f'ocurrencia PAR = {ocurrencias}, valor = {valor}')
 
@@ -73,13 +73,16 @@ def procesar_df(numPresupuesto):
 
                 elif value_counts_negative > value_counts_positive:
 
-                    filas = df[df[columna] == -valor].index[:]
-                    df.loc[filas, 'CONSIDERAR'] = 'NO'
-                    df.loc[filas, 'coincidencias'] = ocurrencias
+                    if value_counts_positive > 0:
 
-                filas = df[df[columna] == valor].index[:value_counts_positive]
-                df.loc[filas, 'CONSIDERAR'] = 'NO'
-                df.loc[filas, 'coincidencias'] = ocurrencias
+                        filas = df[df[columna] == -valor].index[:]
+                        df.loc[filas, 'CONSIDERAR'] = 'NO'
+                        df.loc[filas, 'coincidencias'] = ocurrencias
+
+                        
+                        filas = df[df[columna] == valor].index[:value_counts_positive-1]
+                        df.loc[filas, 'CONSIDERAR'] = 'NO'
+                        df.loc[filas, 'coincidencias'] = ocurrencias
 
 
             #si el valor es 0 le asigna NO a todas las filas
@@ -93,53 +96,73 @@ def procesar_df(numPresupuesto):
             #asigna NO en considerar a todos los valores positivos menos al ultimo y a todos los negativos
             #En caso contrario funciona igual
 
-            elif ocurrencias > 1:
+            elif ocurrencias > 1 and valor != 0 :
 
-                if valor != 0:
+                
 
-                    value_counts_negative = len(df[df[columna] == valor])
-                    value_counts_positive = len(df[df[columna] == -valor])
+                value_counts_negative = len(df[df[columna] == valor])
+                value_counts_positive = len(df[df[columna] == -valor])
 
-                    #chequeador
-                    #print(f' ocurrencias IMPAR= {ocurrencias} la cantidad negativa son: {value_counts_negative}, las cantidad positiva son: {value_counts_positive}, para una variable valor = {valor} ')
+                #chequeador
+                #print(f' ocurrencias IMPAR= {ocurrencias} la cantidad negativa son: {value_counts_negative}, las cantidad positiva son: {value_counts_positive}, para una variable valor = {valor} ')
 
-
-                    if value_counts_positive > value_counts_negative:
-
+                
+                if value_counts_positive > value_counts_negative:
+                    
+                    if ocurrencias == 3:
+                        filas = df[df[columna] == -valor].index[1:]
+                        df.loc[filas, 'CONSIDERAR'] = 'NO'
+                        df.loc[filas, 'coincidencias'] = ocurrencias
+                        #print(f' ocurrencias 3= {ocurrencias} la cantidad negativa son: {value_counts_negative}, las cantidad positiva son: {value_counts_positive}, para una variable valor = {valor} ')
+                        
+                    
+                    else:
                         filas = df[df[columna] == -valor].index[:value_counts_negative]
                         df.loc[filas, 'CONSIDERAR'] = 'NO'
                         df.loc[filas, 'coincidencias'] = ocurrencias
 
-                        filas = df[df[columna] == valor].index[:]
+
+                    filas = df[df[columna] == valor].index[:]
+                    df.loc[filas, 'CONSIDERAR'] = 'NO'
+                    df.loc[filas, 'coincidencias'] = ocurrencias
+
+                else:
+
+                    if ocurrencias == 3 and value_counts_positive > 0:
+
+                        filas = df[df[columna] == valor].index[1:]
                         df.loc[filas, 'CONSIDERAR'] = 'NO'
                         df.loc[filas, 'coincidencias'] = ocurrencias
 
-                    else:
 
+                    elif ocurrencias != 3 and value_counts_positive > 0:
+                        
                         filas = df[df[columna] == valor].index[:value_counts_positive]
                         df.loc[filas, 'CONSIDERAR'] = 'NO'
                         df.loc[filas, 'coincidencias'] = ocurrencias
 
-                        filas = df[df[columna] == -valor].index[:]
-                        df.loc[filas, 'CONSIDERAR'] = 'NO'
-                        df.loc[filas, 'coincidencias'] = ocurrencias
 
-                elif ocurrencias == 1:
+                    filas = df[df[columna] == -valor].index[:]
+                    df.loc[filas, 'CONSIDERAR'] = 'NO'
+                    df.loc[filas, 'coincidencias'] = ocurrencias
 
-                    df.loc[df[columna].abs() == abs(valor) , 'CONSIDERAR'] = ''
-                    df.loc[df[columna].abs() == abs(valor) , 'coincidencias'] = ocurrencias
+            elif ocurrencias == 1:
+
+                df.loc[df[columna].abs() == abs(valor) , 'CONSIDERAR'] = ''
+                df.loc[df[columna].abs() == abs(valor) , 'coincidencias'] = ocurrencias
 
 
         return df
 
-    df_totales = asignar_valores_no(df_totales, 'TOTAL (U$S)')
+    #df_totales = asignar_valores_no(df_totales, 'TOTAL (U$S)')
     df_totales = asignar_valores_no(df_totales, 'TOTAL ($)')
 
-    columnas_eliminar = ['TOTAL (U$S)', 'TOTAL ($)', 'coincidencias', 'coincidencias','indice']
+    columnas_eliminar = ['TOTAL (U$S)', 'TOTAL ($)', 'indice']
     df_totales = df_totales.drop(columns=columnas_eliminar)
 
     df_totales = df_totales.rename(columns={'TOTAL (U$S)_x': 'TOTAL (U$S)', 'TOTAL ($)_x': 'TOTAL ($)'})
 
+    #df_totales.to_excel('df_totales.xlsx',index=False)
     
     # df_facturas ---------------------------------------------------------------------------------->
 
@@ -228,7 +251,7 @@ def procesar_df(numPresupuesto):
 
 
     frases_clave = ["Asiento Mensual Por Acreedores", "Provision Remitos sin Factura", "Reverso prov IVA",
-                        "Provision Manual Facturas a Recibir"]
+                        "Provision Manual Facturas a Recibir", "COMPENSACIÓN ASIENTO DE FACTURA DE ANTICIPO DETALLADA"]
 
 
     def encontrar_frase_mas_parecida(df, frases_clave):
@@ -285,10 +308,46 @@ def procesar_df(numPresupuesto):
     df_merged = pd.merge(df_totales, df_dataC, on='indice')
     df_merged = pd.merge(df_merged, df_facturas, on='indice')
     df_merged = pd.merge(df_merged, df_facturas_fechas, on='indice')
+
+    
+
     df_merged = df_merged.merge(df_considerar[['indice', 'CONSIDERAR_OBS']], on='indice', how='left')
-    df_merged['CONSIDERAR'] = df_merged['CONSIDERAR'].astype(str) + df_merged['CONSIDERAR_OBS'].astype(str)
-    df_merged = df_merged.drop(columns=['CONSIDERAR_OBS'])
-    df_merged['CONSIDERAR'] = df_merged['CONSIDERAR'].apply(lambda x: 'NO' if x != 'nan' else 'SI')
+
+    def mejorarConsiderar(df,columna):
+        df['indice'] = df.index
+        df["CONSIDERAR_MEJORADO"] = ""
+
+        for valor in df[columna][df[columna] <= 0].unique(): #recorre el df filtrado, menores a 0 y unicos
+
+
+            cant_NO_considerar = df.loc[(df["CONSIDERAR"] == "NO") & (df[columna] == valor)].shape[0]
+            cant_NO_considerar_obs = df.loc[(df["CONSIDERAR_OBS"] == "NO") & (df[columna] == valor)].shape[0]
+
+
+            #print(f'para {valor}, la cant de no considerar|obs= {cant_NO_considerar} | {cant_NO_considerar_obs}')
+
+            if cant_NO_considerar == cant_NO_considerar_obs:
+
+                df.loc[df[columna] == valor, "CONSIDERAR_MEJORADO"] = df.loc[df[columna] == valor, "CONSIDERAR_OBS"]
+                df.loc[df[columna] == -valor, "CONSIDERAR_MEJORADO"] = df.loc[df[columna] == -valor, "CONSIDERAR_OBS"]
+
+            elif cant_NO_considerar > cant_NO_considerar_obs:
+
+                df.loc[df[columna] == valor, "CONSIDERAR_MEJORADO"] = df.loc[df[columna] == valor, "CONSIDERAR"]
+                df.loc[df[columna] == -valor, "CONSIDERAR_MEJORADO"] = df.loc[df[columna] == -valor, "CONSIDERAR"]
+        return df
+
+
+    df_merged= mejorarConsiderar(df_merged,"TOTAL ($)")
+
+    #df_merged.to_excel('df_merged.xlsx',index=False)
+
+
+    #df_merged['CONSIDERAR'] = df_merged['CONSIDERAR'].astype(str) + df_merged['CONSIDERAR_OBS'].astype(str)
+    df_merged = df_merged.drop(columns=['CONSIDERAR_OBS','CONSIDERAR'])
+    df_merged['CONSIDERAR_MEJORADO'] = df_merged['CONSIDERAR_MEJORADO'].apply(lambda x: 'SI' if x != 'NO' else 'NO')
+    
+    
 
     # df_final -------------------------------------------------------------------------->
 
@@ -297,7 +356,8 @@ def procesar_df(numPresupuesto):
     df_final = df_final.rename(columns={'Mejor_Texto': 'NUMERO_FACTURA', 
                                         'OBSERVACIONES_x' : 'OBSERVACIONES',
                                         'FECHA' : 'FECHA_ASIENTO',
-                                        'NUMERO_OPERACION': 'NUMERO_ASIENTO'})
+                                        'NUMERO_OPERACION': 'NUMERO_ASIENTO',
+                                        'CONSIDERAR_MEJORADO': 'CONSIDERAR'})
 
     columnas_filtradas = ['IMPUTACION','CANTIDAD_SOLICITADA', 'CANTIDAD_REMITO','TOTAL (U$S)', 'TOTAL ($)', 
                           'CONSIDERAR', 'FECHAS_FACTURAS', 'NUMERO_FACTURA', 'CUENTA_CONTABLE_OC', 
