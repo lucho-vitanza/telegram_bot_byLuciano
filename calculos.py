@@ -9,6 +9,9 @@ numArnumPresupuesto = int(numPresupuesto)
 
 df_clasificada = pd.read_excel(f'/mnt/b/Documentos/9_PORTAhnos/chatBot_telegram/src/df_clasificada_{numPresupuesto}.xlsx')
 
+
+df_clasificada = df_clasificada[df_clasificada["CONSIDERAR"] == "SI"]
+
 def estadisticas(df):
 
     # df_agrupado -------------------------------------------------->

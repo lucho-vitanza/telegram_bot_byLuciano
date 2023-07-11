@@ -25,6 +25,8 @@
   },
   "homepage": "https://github.com/lucho-vitanza/telegram_bot_byLuciano#readme",
   "dependencies": {
+    "node-outlook": "^1.1.8",
+    "nodemailer": "^6.9.3",
     "telebot": "^1.4.1"
   }
 }

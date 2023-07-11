@@ -384,7 +384,7 @@ def procesar_df(numPresupuesto):
     df_normalizada['PROYECTO_OC'] = df_normalizada['PROYECTO_OC'].fillna(df_normalizada['PROYECTO_OC'].ffill())
 
     #Saco los asientos que no empiecen con 16 y 17
-    df_normalizada.loc[~(df_normalizada["NUMERO_ASIENTO"].str.startswith(("16","17"))), "NUMERO_ASIENTO"] = "0"
+    df_normalizada.loc[~(df_normalizada["NUMERO_ASIENTO"].str.startswith(("16","17","14","15","12","13"))), "NUMERO_ASIENTO"] = "0"
 
     #saco los "-" de la columna codigo_imputacion
     df_normalizada.loc[df_normalizada["CODIGO_IMPUTACION"] == "-", "CODIGO_IMPUTACION"] = 0
@@ -468,7 +468,7 @@ def procesar_df(numPresupuesto):
         else:  df_normalizadaC.at[index, "CANTIDAD"] = row["CANTIDAD_REMITO"]
 
 
-    #df_normalizadaC.to_excel('df_normalizadaC.xlsx',index=False)
+    #df_normalizadaC.to_excel('df_normalizadaC_sinTextoEspecial.xlsx',index=False)
 
     # df_clasificar --------------------------------------------------------------------->
     
@@ -476,6 +476,8 @@ def procesar_df(numPresupuesto):
     df_normalizadaC["indice"] = df_normalizadaC.index
     df_normalizadaC = df_normalizadaC.merge(df_clasificacionOtros[['indice', 'texto_especial']], on='indice', how='left')
     
+    df_normalizadaC.to_excel('df_normalizadaC_conTextoEspecial.xlsx',index=False)
+
     def clasificar(df):
 
         def es_digito(cadena):
@@ -517,11 +519,13 @@ def procesar_df(numPresupuesto):
                           'FECHA_REMITO', 'OBSERVACIONES', 'PROVEEDOR', 'OC_FECHA',
                           'CLASIFICACION', 'FECHA_ASIENTO', 'OC_NUMERO',
                           'TIPO', 'NUMERO_ASIENTO', 'CODIGO_ARTICULO', 'ARTICULO',
-                          "CANTIDAD", "CUENTA_CONTABLE",'CODIGO_IMPUTACION']
+                          "CANTIDAD", "CUENTA_CONTABLE",'CODIGO_IMPUTACION',]
+    #'NUMERO_FACTURA_1111','texto_especial'
 
     df_clasificada = df_normalizadaC[columnas_filtradas]
 
     df_clasificada.to_excel(f'src/df_clasificada_{numPresupuesto}.xlsx',index=False)
+    
     
     return df_clasificada
 
