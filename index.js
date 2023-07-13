@@ -43,7 +43,7 @@ const formatCurrency = (value) => {
   return value.toLocaleString("es-AR", { style: "currency", currency: "USD" });
 };
 
-const enviarCorreo = async (destinatario, asunto, contenido, archivoAdjunto, nombre, numPresupuesto) => {
+const enviarCorreo = async (destinatario, asunto, contenido, archivoAdjunto, nombreProyecto, numPresupuesto) => {
   try {
     const transporter = nodemailer.createTransport({
       service: "Outlook",
@@ -60,8 +60,9 @@ const enviarCorreo = async (destinatario, asunto, contenido, archivoAdjunto, nom
       html: contenido,
       attachments: [
         {
-          filename: `df_clasificada_${numPresupuesto}.xlsx`,
+          filename: `Presupuesto_${numPresupuesto}_${nombreProyecto}.xlsx`,
           path: archivoAdjunto,
+          
         },
       ],
     };
@@ -87,6 +88,11 @@ const proyectos = [
   { numPresupuesto: 6, nombre: "PROYECTO PLANTA SPC FOOD 1000 TN" },
   { numPresupuesto: 7, nombre: "PRES MANTO CONS MASIVO 23" },
   { numPresupuesto: 8, nombre: "PRES MEJORAS CONS MASIVO 23" },
+  { numPresupuesto: 9, nombre: "PRESUP MEJORAS MINIDES 2023" },
+  { numPresupuesto: 10,nombre: "PLANTA TEXTURIZADO" },
+  { numPresupuesto: 11,nombre: "PROTEINA ARVEJA" },
+  { numPresupuesto: 12,nombre: "MINIDEST ALCOSOL" },
+  { numPresupuesto: 13,nombre: "PLANTA BIODIESEL DOS RIOS" },
 ];
 
 const getNombreProyecto = (numPresupuesto) => {
@@ -123,6 +129,21 @@ bot.on(["/start", "/hola"], async (msg) => {
           [
             { text: "PRES MEJORAS CONS MASIVO 23", callback_data: "8" },
           ],
+          [
+            { text: "PRES MEJORAS MINIDEST 23", callback_data: "9" },
+          ],
+          [
+            { text: "PLANTA TEXTURIZADO", callback_data: "10" },
+          ],
+          [
+            { text: "PROTEINA ARVEJA", callback_data: "11" },
+          ],
+          [
+            { text: "MINIDEST ALCOSOL", callback_data: "12" },
+          ],
+          [
+            { text: "PLANTA BIODIESEL DOS RIOS", callback_data: "13" },
+          ],
         ],
       },
     });
@@ -135,11 +156,14 @@ bot.on("callbackQuery", async (msg) => {
   const choice = msg.data;
   const chatId = msg.message.chat.id;
 
-  if (choice === "1" || choice === "2" || choice === "3" || choice === "4" || choice === "5" || choice === "6" || choice === "7" || choice === "8") {
+  if (choice === "1" || choice === "2" || choice === "3" || choice === "4" ||
+      choice === "5" || choice === "6" || choice === "7" || choice === "8" ||
+      choice === "9" || choice === "10"|| choice === "11"|| choice === "12"||
+      choice === "13"|| choice === "14"|| choice === "15"|| choice === "16") {
     const numPresupuesto = parseInt(choice);
     try {
       const nombreProyecto = getNombreProyecto(numPresupuesto);
-      await bot.sendMessage(chatId, `Obteniendo presupuesto ${nombreProyecto}...`);
+      await bot.sendMessage(chatId, `Obteniendo y neteando presupuesto ${nombreProyecto}...`);
 
       const presupuesto = await getPresupuesto(numPresupuesto);
 
@@ -193,7 +217,8 @@ bot.on("callbackQuery", async (msg) => {
         tablaMd2 += `| ${key} | ${formatCurrency(value)} |\n`;
       }
       await bot.sendMessage(chatId, tablaMd2);
-//---------------------------------------------------------ENVIAR POR MAIL----------------------------------
+
+      //---------------------------------------------------------ENVIAR POR MAIL----------------------------------
 
       await bot.sendMessage(chatId, "Presiona el botón 'Enviar por correo' para enviar el presupuesto por correo.", {
         replyMarkup: {
@@ -208,35 +233,76 @@ bot.on("callbackQuery", async (msg) => {
       console.error("Error al obtener el presupuesto:", error);
       await bot.sendMessage(chatId, "Ocurrió un error al obtener el presupuesto. Por favor, intenta de nuevo más tarde.");
     }
-    
   } else if (choice.startsWith("enviar_correo_")) {
-      const numPresupuesto = choice.split("_")[2];
-      const nombreProyecto = getNombreProyecto(parseInt(numPresupuesto));
-  
-      await bot.sendMessage(chatId, "Por favor, ingresa tu correo electrónico:");
-  
-      bot.on("text", async (msg) => {
-        const correoElectronico = msg.text;
-  
-        try {
-          await bot.sendMessage(chatId, "Enviando correo electrónico...");
-  
-          const archivoAdjunto = `./src/df_clasificada_${numPresupuesto}.xlsx`;
+    const numPresupuesto = choice.split("_")[2];
+    const nombreProyecto = getNombreProyecto(parseInt(numPresupuesto));
 
-          const contenido = "Adjunto el presupuesto solicitado.";
-  
-          await enviarCorreo(correoElectronico, `Presupuesto neteado de ${nombreProyecto}`, contenido, archivoAdjunto, nombreProyecto, numPresupuesto);
-  
-          await bot.sendMessage(chatId, "El correo electrónico ha sido enviado exitosamente.");
-        } catch (error) {
-          console.error("Error al enviar el correo electrónico:", error);
-          await bot.sendMessage(chatId, "Ocurrió un error al enviar el correo electrónico. Por favor, intenta de nuevo más tarde.");
-        }
-  
-      });
+    await bot.sendMessage(chatId, "Por favor, ingresa tu correo electrónico:");
+
+    bot.on("text", async (msg) => {
+      const correoElectronico = msg.text;
+
+      try {
+        await bot.sendMessage(chatId, "Enviando correo electrónico...");
+
+        const archivoAdjunto = `./src/df_clasificada_${numPresupuesto}.xlsx`;
+        const contenido = `Adjunto el presupuesto de ${nombreProyecto}.`;
+
+        await enviarCorreo(correoElectronico, `Presupuesto neteado de ${nombreProyecto}`, contenido, archivoAdjunto, nombreProyecto, numPresupuesto);
+
+        await bot.sendMessage(chatId, "El correo electrónico ha sido enviado exitosamente.");
+
+        // Volver al principio
+        await bot.sendMessage(msg.chat.id, `Hola ${msg.chat.username}, tenemos unos presupuestos para vos.`, {
+          replyMarkup: {
+            inline_keyboard: [
+              [
+                { text: "PRESUPUESTO MEJ. PA- PROTE- CCP23", callback_data: "1" },
+              ],
+              [
+                { text: "PRESUPUESTO MNTO. PA- PROTE- CCP23", callback_data: "2" },
+              ],
+              [
+                { text: "PRESUPUESTO PROD. CONS MASIV 23", callback_data: "3" },
+              ],
+              [
+                { text: "PRESUPUESTO PROD. PA MIN CACO 23", callback_data: "5" },
+              ],
+              [
+                { text: "PROYECTO PRENSADO DE SOJA", callback_data: "4" },
+              ],
+              [
+                { text: "PROYECTO PLANTA SPC FOOD 1000 TN", callback_data: "6" },
+              ],
+              [
+                { text: "PRES MNTO CONS MASIVO 23", callback_data: "7" },
+              ],
+              [
+                { text: "PRES MEJORAS CONS MASIVO 23", callback_data: "8" },
+              ],
+              [
+                { text: "PRES MEJORAS MINIDEST 23", callback_data: "9" },
+              ],
+              [
+                { text: "PLANTA TEXTURIZADO", callback_data: "10" },
+              ],
+              [
+                { text: "PROTEINA ARVEJA", callback_data: "11" },
+              ],
+              [
+                { text: "MINIDEST ALCOSOL", callback_data: "12" },
+              ],
+              [
+                { text: "PLANTA BIODIESEL DOS RIOS", callback_data: "13" },
+              ],
+            ],
+          },
+        });
+      } catch (error) {
+        console.error("Error al enviar el correo electrónico:", error);
+        await bot.sendMessage(chatId, "Ocurrió un error al enviar el correo electrónico. Por favor, intenta de nuevo más tarde.");
+      }
+    });
   }
-  
-  });
-
+});
 bot.start();
-

@@ -162,7 +162,7 @@ def procesar_df(numPresupuesto):
 
     df_totales = df_totales.rename(columns={'TOTAL (U$S)_x': 'TOTAL (U$S)', 'TOTAL ($)_x': 'TOTAL ($)'})
 
-    #df_totales.to_excel('df_totales.xlsx',index=False)
+    #   df_totales.to_excel('df_totales.xlsx',index=False)
     
     # df_facturas ---------------------------------------------------------------------------------->
 
@@ -251,7 +251,10 @@ def procesar_df(numPresupuesto):
 
 
     frases_clave = ["Asiento Mensual Por Acreedores", "Provision Remitos sin Factura", "Reverso prov IVA",
-                        "Provision Manual Facturas a Recibir", "COMPENSACIÓN ASIENTO DE FACTURA DE ANTICIPO DETALLADA"]
+                        "Provision Manual Facturas a Recibir",
+                        "COMPENSACIÓN ASIENTO DE FACTURA DE ANTICIPO DETALLADA",
+                        "Apertura del ejercicio","Cierre del ejercicio","Provision FAR",
+                        "AxI"]
 
 
     def encontrar_frase_mas_parecida(df, frases_clave):
@@ -274,6 +277,7 @@ def procesar_df(numPresupuesto):
                                 mejor_similitud = similitud
                                 Mejor_Texto = subcadena
 
+            df_considerar.at[index, 'Mejor_Texto'] = Mejor_Texto
             df_considerar.at[index, 'Mejor_Texto_obs'] = frase
             df_considerar.at[index, 'Similitud_obs'] = mejor_similitud
 
@@ -317,7 +321,7 @@ def procesar_df(numPresupuesto):
         df['indice'] = df.index
         df["CONSIDERAR_MEJORADO"] = ""
 
-        for valor in df[columna][df[columna] <= 0].unique(): #recorre el df filtrado, menores a 0 y unicos
+        for valor in df[columna][df[columna] <= 0].unique(): 
 
 
             cant_NO_considerar = df.loc[(df["CONSIDERAR"] == "NO") & (df[columna] == valor)].shape[0]
@@ -333,8 +337,11 @@ def procesar_df(numPresupuesto):
 
             elif cant_NO_considerar > cant_NO_considerar_obs:
 
-                df.loc[df[columna] == valor, "CONSIDERAR_MEJORADO"] = df.loc[df[columna] == valor, "CONSIDERAR"]
-                df.loc[df[columna] == -valor, "CONSIDERAR_MEJORADO"] = df.loc[df[columna] == -valor, "CONSIDERAR"]
+                observaciones_comunes = df[(df.groupby('OBSERVACIONES_x')[columna].transform('sum') == 0)]['OBSERVACIONES_x']
+                df.loc[(df["OBSERVACIONES_x"].isin(observaciones_comunes)) & (df[columna].abs() == abs(valor)), "CONSIDERAR_MEJORADO"] = "NO"
+
+                df.loc[(df["OBSERVACIONES_x"].str.startswith(("Apertura del ejercicio","Cierre del ejercicio"))), "CONSIDERAR_MEJORADO"] = "NO"
+                
         return df
 
 
@@ -384,6 +391,7 @@ def procesar_df(numPresupuesto):
     df_normalizada['PROYECTO_OC'] = df_normalizada['PROYECTO_OC'].fillna(df_normalizada['PROYECTO_OC'].ffill())
 
     #Saco los asientos que no empiecen con 16 y 17
+    df_normalizada["NUMERO_ASIENTO"] = df_normalizada["NUMERO_ASIENTO"].astype(str)
     df_normalizada.loc[~(df_normalizada["NUMERO_ASIENTO"].str.startswith(("16","17","14","15","12","13"))), "NUMERO_ASIENTO"] = "0"
 
     #saco los "-" de la columna codigo_imputacion
@@ -407,7 +415,7 @@ def procesar_df(numPresupuesto):
     df_clasificacionOtros = pd.DataFrame(columns=['Mejor_Texto', 'Similitud'])
 
     frases_clave = ["Provision Hs de trabajo", "P/reclasf", "CONSUMOS DEPOSITO",
-                    "AJUSTE STOCK PAÑOL","REVERSO Hs de trabajo",]
+                    "AJUSTE STOCK PAÑOL","REVERSO Hs de trabajo","via asiento sueldos","AxI","AXI"]
 
     def encontrar_frase_mas_parecida(df, frases_clave):
 
@@ -430,12 +438,16 @@ def procesar_df(numPresupuesto):
                         if similitud > mejor_similitud:
                                 mejor_similitud = similitud
                                 mejor_texto = frase
-
+                                
             df_clasificacionOtros.at[index, 'Mejor_Texto'] = mejor_texto
             df_clasificacionOtros.at[index, 'Similitud'] = mejor_similitud
 
         df_clasificacionOtros.loc[df_clasificacionOtros['Similitud'] <= 0.7, 'Mejor_Texto'] = ""
-        df_clasificacionOtros['texto_especial'] = df_clasificacionOtros['Mejor_Texto'].apply(lambda x: 1 if x in ["Provision Hs de trabajo","REVERSO Hs de trabajo"] else (2 if x == "P/reclasf" else (3 if x in ["CONSUMOS DEPOSITO", "AJUSTE STOCK PAÑOL"] else 0)))
+        df_clasificacionOtros['texto_especial'] = df_clasificacionOtros['Mejor_Texto'].apply(lambda x: 1 if x in ["Provision Hs de trabajo","REVERSO Hs de trabajo","via asiento sueldos"]
+                                                                                              else (2 if x == "P/reclasf"
+                                                                                                     else (3 if x in ["CONSUMOS DEPOSITO", "AJUSTE STOCK PAÑOL"]
+                                                                                                                  else (4 if x in ["AxI","AXI"]
+                                                                                                                   else 0))))
 
         return df_clasificacionOtros
 
@@ -476,7 +488,7 @@ def procesar_df(numPresupuesto):
     df_normalizadaC["indice"] = df_normalizadaC.index
     df_normalizadaC = df_normalizadaC.merge(df_clasificacionOtros[['indice', 'texto_especial']], on='indice', how='left')
     
-    df_normalizadaC.to_excel('df_normalizadaC_conTextoEspecial.xlsx',index=False)
+    #df_normalizadaC.to_excel('df_normalizadaC_conTextoEspecial.xlsx',index=False)
 
     def clasificar(df):
 
@@ -507,8 +519,14 @@ def procesar_df(numPresupuesto):
                 df.at[index, "CLASIFICACION"] = "Otros asientos (reclasif/compes)"
             elif (row["NUMERO_ASIENTO"] != 0) and (row["NUMERO_FACTURA_1111"] == 0) and (row["NUMERO_REMITO"] == 0) and (row["OC_NUMERO"] == 0) and (row["texto_especial"] == 3):
                 df.at[index, "CLASIFICACION"] = "Asientos Pannol"
+            elif (row["NUMERO_ASIENTO"] != 0) and (row["NUMERO_FACTURA_1111"] == 0) and (row["NUMERO_REMITO"] == 0) and (row["OC_NUMERO"] == 0) and (row["texto_especial"] == 4):
+                df.at[index, "TIPO"] = "AJUSTE POR INFLACION"
+                df.at[index, "CLASIFICACION"] = "Ajuste p/inflacion"
+                df.at[index, "CONSIDERAR"] = "NO"
+                
             else:
                 df.at[index, "CLASIFICACION"] = np.nan
+
         return df
 
     df_clasificada = clasificar(df_normalizadaC)
@@ -519,7 +537,8 @@ def procesar_df(numPresupuesto):
                           'FECHA_REMITO', 'OBSERVACIONES', 'PROVEEDOR', 'OC_FECHA',
                           'CLASIFICACION', 'FECHA_ASIENTO', 'OC_NUMERO',
                           'TIPO', 'NUMERO_ASIENTO', 'CODIGO_ARTICULO', 'ARTICULO',
-                          "CANTIDAD", "CUENTA_CONTABLE",'CODIGO_IMPUTACION',]
+                          "CANTIDAD", "CUENTA_CONTABLE",'CODIGO_IMPUTACION','NUMERO_FACTURA_1111','texto_especial']
+    
     #'NUMERO_FACTURA_1111','texto_especial'
 
     df_clasificada = df_normalizadaC[columnas_filtradas]
