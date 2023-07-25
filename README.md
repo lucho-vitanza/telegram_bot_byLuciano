@@ -25,9 +25,8 @@ The project consists of two main parts:
     Showing Information in Telegram Bot:
         -On demand, when "index.js" is called from Node.js and the client selects a budget to analyze from the menu, "index.js" calls                      "calculos.py" with the corresponding keyID as a parameter.
         -The function "estadisticas" in "calculos.py" returns a JSON response via stdout, which is then caught and sent to the Telegram Bot to             display the information.
-
-Python:
-      ```linux console
+linux console:
+    ```
     pip install -r requirements.txt
       ```
   I use: 
