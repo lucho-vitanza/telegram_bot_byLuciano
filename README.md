@@ -28,22 +28,23 @@ The project consists of two main parts:
 
 Python:
   console linux: 
+    ```linux console
     pip install -r requirements.txt
-  
+      ```
   I use: 
-    pyenv==2.3.20
+    ```pyenv==2.3.20```
   
-  requirements:
+  ```requirements:
     python==3.11.4
     pandas==1.3.0
     numpy==1.19.5
     textblob==0.15.3
     python-Levenshtein==0.12.2
     datefinder==0.7.1
-  
-Node.js:
+  ```
+```Node.js:
   nvm use 18.16.0
-
+```
 run bot:
   console linux in index.js directory: npm start
 
