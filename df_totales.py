@@ -328,7 +328,7 @@ def procesar_df(numPresupuesto):
             cant_NO_considerar_obs = df.loc[(df["CONSIDERAR_OBS"] == "NO") & (df[columna] == valor)].shape[0]
 
 
-            #print(f'para {valor}, la cant de no considerar|obs= {cant_NO_considerar} | {cant_NO_considerar_obs}')
+            print(f'para {valor}, la cant de "no" en considerar|obs= {cant_NO_considerar} | {cant_NO_considerar_obs}')
 
             if cant_NO_considerar == cant_NO_considerar_obs:
 
@@ -341,7 +341,26 @@ def procesar_df(numPresupuesto):
                 df.loc[(df["OBSERVACIONES_x"].isin(observaciones_comunes)) & (df[columna].abs() == abs(valor)), "CONSIDERAR_MEJORADO"] = "NO"
 
                 df.loc[(df["OBSERVACIONES_x"].str.startswith(("Apertura del ejercicio","Cierre del ejercicio"))), "CONSIDERAR_MEJORADO"] = "NO"
+
+                if cant_NO_considerar_obs == 0:
+
+                    df.loc[df[columna] == valor, "CONSIDERAR_MEJORADO"] = df.loc[df[columna] == valor, "CONSIDERAR"]
+                    df.loc[df[columna] == -valor, "CONSIDERAR_MEJORADO"] = df.loc[df[columna] == -valor, "CONSIDERAR"]
+
+                elif valor == 0:
+
+                    df.loc[df[columna] == valor, "CONSIDERAR_MEJORADO"] = df.loc[df[columna] == valor, "CONSIDERAR"]
                 
+                #proveedor_comun = df[(df.groupby('PROVEEDOR')[columna].transform('sum') == 0)]['PROVEEDOR']
+                #df.loc[(df["PROVEEDOR"].isin(proveedor_comun)) & (df[columna].abs() == abs(valor)), "CONSIDERAR_MEJORADO"] = "NO"
+
+            elif cant_NO_considerar < cant_NO_considerar_obs:
+
+                df.loc[df[columna] == valor, "CONSIDERAR_MEJORADO"] = df.loc[df[columna] == valor, "CONSIDERAR"]
+                df.loc[df[columna] == -valor, "CONSIDERAR_MEJORADO"] = df.loc[df[columna] == -valor, "CONSIDERAR"]
+
+
+
         return df
 
 
@@ -384,6 +403,7 @@ def procesar_df(numPresupuesto):
     columnas_numericas = ['NUMERO_FACTURA', 'NUMERO_ASIENTO', 'OC_NUMERO', 'CODIGO_ARTICULO',
                           'NUMERO_REMITO','CUENTA_CONTABLE_OC','CANTIDAD_SOLICITADA',
                            'CANTIDAD_REMITO','CODIGO_IMPUTACION']
+    
     df_normalizada[columnas_numericas] = df_normalizada[columnas_numericas].fillna(0)
 
     #RELLENO los registros vacios con el nombre o el codigo de proyecto segun corresponda
@@ -479,6 +499,18 @@ def procesar_df(numPresupuesto):
         if (row["NUMERO_FACTURA"] == 0.0) & (row["NUMERO_REMITO"] == 0.0) & (row["OC_NUMERO"] != 0.0):  df_normalizadaC.at[index, "CANTIDAD"] = row["CANTIDAD_SOLICITADA"]
         else:  df_normalizadaC.at[index, "CANTIDAD"] = row["CANTIDAD_REMITO"]
 
+    #Proveedor
+
+       # if (row["PROVEEDOR"] == ""):
+
+      #      string = row["OBSERVACION"]
+
+     #       for letra in string:
+
+    #            if letra == "-":
+
+                    
+
 
     #df_normalizadaC.to_excel('df_normalizadaC_sinTextoEspecial.xlsx',index=False)
 
@@ -537,7 +569,7 @@ def procesar_df(numPresupuesto):
                           'FECHA_REMITO', 'OBSERVACIONES', 'PROVEEDOR', 'OC_FECHA',
                           'CLASIFICACION', 'FECHA_ASIENTO', 'OC_NUMERO',
                           'TIPO', 'NUMERO_ASIENTO', 'CODIGO_ARTICULO', 'ARTICULO',
-                          "CANTIDAD", "CUENTA_CONTABLE",'CODIGO_IMPUTACION','NUMERO_FACTURA_1111','texto_especial']
+                          "CANTIDAD", "CUENTA_CONTABLE",'CODIGO_IMPUTACION']
     
     #'NUMERO_FACTURA_1111','texto_especial'
 
