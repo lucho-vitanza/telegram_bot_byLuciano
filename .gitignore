@@ -15,4 +15,5 @@ node_modules/
 ./src/**.xlsx
 
 main.py
+**/main.py
 
