@@ -27,8 +27,7 @@ The project consists of two main parts:
         -The function "estadisticas" in "calculos.py" returns a JSON response via stdout, which is then caught and sent to the Telegram Bot to             display the information.
 
 Python:
-  console linux: 
-    ```linux console
+      ```linux console
     pip install -r requirements.txt
       ```
   I use: 
