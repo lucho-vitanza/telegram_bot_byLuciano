@@ -45,7 +45,9 @@ Python:
   nvm use 18.16.0
 ```
 run bot:
-  console linux in index.js directory: npm start
+  ```console linux in index.js directory:
+  npm start
+```
 
 
 Enjoy your budget analizator :)
