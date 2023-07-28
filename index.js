@@ -3,6 +3,7 @@ const { promisify } = require("util");
 const exec = promisify(require("child_process").exec);
 const CONSTANTS = require("./constants");
 const nodemailer = require("nodemailer");
+require("dotenv").config();
 
 const bot = new Telebot({
   token: CONSTANTS.TELEGRAM_TOKEN,
@@ -46,15 +47,17 @@ const formatCurrency = (value) => {
 const enviarCorreo = async (destinatario, asunto, contenido, archivoAdjunto, nombreProyecto, numPresupuesto) => {
   try {
     const transporter = nodemailer.createTransport({
-      service: "Outlook",
+      host: "smtp.office365.com", // Servidor SMTP de Hotmail
+      port: 587, // Puerto de conexión
+      secure: true, // true para TLS, false para STARTTLS
       auth: {
-        user: "lvitanza@porta.com.ar",
-        pass: "Porta2791",
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_PASS,
       },
     });
 
     const mensaje = {
-      from: "lvitanza@porta.com.ar",
+      from: "luvp95@hotmail.com",
       to: destinatario,
       subject: asunto,
       html: contenido,

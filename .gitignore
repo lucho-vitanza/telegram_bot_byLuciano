@@ -17,3 +17,5 @@ node_modules/
 main.py
 **/main.py
 
+.env
+
